@@ -1,0 +1,1 @@
+awk 'BEGIN{e=1}NF==0{e++;next}{n[e]+=$1};END{for(i in n)print i,n[i]}' day1.in | sort -n -k 2 | tail -3 | awk '{a+=$2}END{print a}'
