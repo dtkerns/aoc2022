@@ -1,0 +1,1 @@
+gawk -ve=1 'NF==0{e++;next}{n[e]+=$1};END{asort(n);print n[e]"\n"n[e-2]+n[e-1]+n[e]}' day1.in
