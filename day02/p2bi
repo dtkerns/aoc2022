@@ -1,0 +1,1 @@
+awk -vA=A -vB=B -vC=C -vX=X -vY=Y -vZ=Z -vOFS='\n' 'BEGIN{v[A]=v[X]=1;v[B]=v[Y]=2;v[C]=v[Z]=3;w[A X]=3;w[A Y]=6;w[A Z]=0;w[B X]=0;w[B Y]=3;w[B Z]=6;w[C X]=6;w[C Y]=0;w[C Z]=3;p[A X]=C;p[A Y]=A;p[A Z]=B;p[B X]=A;p[B Y]=B;p[B Z]=C;p[C X]=B;p[C Y]=C;p[C Z]=A;W[X]=0;W[Y]=3;W[Z]=6;}{s+=v[$2]+w[$1$2];S+=v[p[$1$2]]+W[$2];}END{print s,S}' $1
