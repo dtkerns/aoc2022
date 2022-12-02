@@ -1,0 +1,30 @@
+# A = Rock	X = Lose
+# B = Paper     Y = Draw
+# C = Sissors   Z = Win
+# score = {Z=1 X=2 Y=3} + {L=0 D=3 W=6}
+# A Y
+# B X
+# C Z
+awk 'BEGIN{
+v["A"]=1;
+v["B"]=2;
+v["C"]=3;
+p["A","X"]="C";
+p["A","Y"]="A";
+p["A","Z"]="B";
+p["B","X"]="A";
+p["B","Y"]="B";
+p["B","Z"]="C";
+p["C","X"]="B";
+p["C","Y"]="C";
+p["C","Z"]="A";
+w["X"]=0;
+w["Y"]=3;
+w["Z"]=6;
+}
+{
+ ss = v[p[$1,$2]]+w[$2];
+#print $0, v[$2], w[$1,$2], ss, s+ss
+s += ss;
+}
+END{print s}' $1
