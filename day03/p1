@@ -1,0 +1,29 @@
+#
+gawk 'BEGIN{
+for (i=0;i<26;i++) {
+ c = sprintf("%c", 97+i);
+ C = sprintf("%c", 65+i);
+ v[c]=i+1;
+ v[C]=i+27;
+ #print c, v[c]
+ #print C, v[C]
+}
+}
+{
+  l=length($1)/2;a=substr($1,1,l);b=substr($1,l+1);
+#print l
+#print $1
+#print a
+#print b
+ for (i=1;i<=l;i++) {
+   l=substr($1,i,1);
+   if (b ~ l) {
+     #print l, v[l]
+     s += v[l]
+     next;
+    }
+  }
+}
+END {
+  print s
+}' $1

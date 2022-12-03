@@ -1,0 +1,34 @@
+#
+gawk 'BEGIN{
+for (i=0;i<26;i++) {
+ c = sprintf("%c", 97+i);
+ C = sprintf("%c", 65+i);
+ v[c]=i+1;
+ v[C]=i+27;
+ #print c, v[c]
+ #print C, v[C]
+}
+}
+{
+  x = $1
+  getline y
+  getline z
+  #print x, y, z
+  l = length(x);
+#print l
+#print x
+#print y
+#print z
+ for (i=1;i<=l;i++) {
+   ll=substr(x,i,1);
+   #print ll
+   if (y ~ ll && z ~ ll) {
+     s += v[ll]
+     #print l, v[ll], s
+     next;
+    }
+  }
+}
+END {
+  print s
+}' $1
