@@ -1,0 +1,58 @@
+gawk '
+dataDone == 0 {
+  d[NR] = $0;
+  #print $0
+}
+dataDone == 0 && $1 == 1 {
+  numC = NF;
+}
+NF == 0 {
+  dataDone=1;
+  for (i = NR-2; i > 0; i--) {
+    #print "Row ", i
+    for (f = 1; f <= numC; f++) {
+      ps = substr(d[i], (f-1)*4, 4);
+      gsub(" ", "", ps);
+      l = substr(ps,2,1);
+      #print "D ->", f, ps, l
+      if (l != "") {
+         C[f] = C[f] l
+         C2[f] = C2[f] l
+      }
+    }
+  }
+  #for (f = 1; f <= numC; f++) { print f, C[f] }
+}
+# 1 ZN
+# 2 MCD
+# 3 P
+# move 1 from 2 to 1
+# move 3 from 1 to 3
+# move 2 from 2 to 1
+# move 1 from 1 to 2
+$1 == "move" {
+  #print $0
+  n = $2;
+  src = $4
+  dst = $6
+  for (i = 0; i < n; i++) {
+    z = substr(C[src],length(C[src]),1);
+    C[src] = substr(C[src], 1, length(C[src]) -1);
+    C[dst] = C[dst] z
+  }
+  z = substr(C2[src],length(C2[src])-(n-1));
+  #print "z", z
+  C2[src] = substr(C2[src], 1, length(C2[src])-n);
+  C2[dst] = C2[dst] z
+  #for (f = 1; f <= numC; f++) { print f, C[f] }
+}
+END {
+  for (f = 1; f <= numC; f++) {
+    printf "%s", substr(C[f],length(C[f]),1);
+  }
+  print ""
+  for (f = 1; f <= numC; f++) {
+    printf "%s", substr(C2[f],length(C2[f]),1);
+  }
+  print ""
+}' $1

@@ -1,0 +1,51 @@
+gawk 'BEGIN{
+}
+dataDone == 0 {
+  d[NR] = $0;
+ print $0
+}
+dataDone == 0 && $1 == 1 {
+  numC = NF;
+}
+NF == 0 {
+  dataDone=1;
+  for (i = NR-2; i > 0; i--) {
+    print "Row ", i
+    for (f = 1; f <= numC; f++) {
+      ps = substr(d[i], (f-1)*4, 4);
+      gsub(" ", "", ps);
+      l = substr(ps,2,1);
+      print "D ->", f, ps, l
+      if (l != "") C[f] = C[f] l
+    }
+  }
+  for (f = 1; f <= numC; f++) {
+    print f, C[f]
+  }
+}
+# 1 ZN
+# 2 MCD
+# 3 P
+# move 1 from 2 to 1
+# move 3 from 1 to 3
+# move 2 from 2 to 1
+# move 1 from 1 to 2
+$1 == "move" {
+  print $0
+  n = $2;
+  src = $4
+  dst = $6
+  z = substr(C[src],length(C[src])-(n-1));
+  print "z", z
+  C[src] = substr(C[src], 1, length(C[src])-n);
+  C[dst] = C[dst] z
+  for (f = 1; f <= numC; f++) {
+    print f, C[f]
+  }
+}
+END {
+  for (f = 1; f <= numC; f++) {
+    printf "%s", substr(C[f],length(C[f]),1);
+  }
+  print ""
+}' $1
