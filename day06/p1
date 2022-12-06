@@ -1,5 +1,5 @@
 awk '
-function u(p,    i) {
+function u(p,    a,b,c,d) {
   a = substr(p,1,1);
   b = substr(p,2,1);
   c = substr(p,3,1);
