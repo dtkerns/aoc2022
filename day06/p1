@@ -1,0 +1,19 @@
+awk '
+function u(p,    i) {
+  a = substr(p,1,1);
+  b = substr(p,2,1);
+  c = substr(p,3,1);
+  d = substr(p,4,1);
+  #print a,b,c,d
+  if (a == b || a == c || a == d || b == c || b == d || c == d) return 0;
+  return 1;
+}
+{
+  for (i = 1; i < length($1); i++) {
+    p = substr($1,i,4);
+    if (u(p)) {
+      print i+3, p;
+      next;
+    }
+  }
+}' $1
