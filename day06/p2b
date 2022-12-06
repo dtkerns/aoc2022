@@ -1,11 +1,12 @@
 awk '
+# the generalized case negatively impacts performance
 function u(p, l,   i,j,a) {
   for (i = 1; i <= l; i++) {
     a[i] = substr(p,i,1);
   }
   for (i = 1; i <= l-1; i++) {
     for (j = i+1; j <= l; j++) {
-     # print  "    " i, j, a[i], a[j], a[i] == a[j]
+     # print  "    " i, j, a[i], a[j], a[i] == a[j];
      if (a[i] == a[j]) return 0;
     }
   }
@@ -22,10 +23,10 @@ function u(p, l,   i,j,a) {
       }
     }
     pp = substr($1,i,14);
-    # print pp
+    # print pp;
     if (u(pp,14)) {
       print "M", i+13, pp;
-      next
+      next;
     }
   }
 }' $1
