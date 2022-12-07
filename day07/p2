@@ -1,0 +1,77 @@
+awk 'BEGIN {
+ pwd = "";
+}
+function cd(p, n, a) {
+  # print "enter cd", pwd, p
+  if (p == "..") {
+    n=split(pwd,a,"/");
+# print "drop " a[n]
+    sub("/"a[n]"$", "", pwd);
+    if (pwd == "") pwd = "/";
+  } else if (p == "/") {
+    pwd = p;
+  } else {
+    if (pwd ~ /[/]$/) {
+      pwd = pwd p;
+    } else {
+      pwd = pwd "/" p;
+    }
+  }
+}
+# { print "%%%%%%%%", $0, " -> ", pwd }
+$1 == "$" && $2 == "cd" { cd($3); next; }
+$1 == "$" && $2 == "ls" { next; }
+$1 == "dir" { con[(pwd=="/"?"":pwd) "/" $2] =  pwd; next; }
+{
+  sz[pwd] += $1;
+  # print "add " $1 " to " pwd " for " $2 " -> " sz[pwd];
+  next;
+}
+END {
+# for (i in con) { print i, con[i] }
+# /a 94269
+# /d 24933642
+# /a/e 584
+# / 23352670
+  for (p in sz) {
+    T[p] = sz[p];
+    # print "set " p, T[p]
+  }
+  # print "========="
+  for (p in sz) {
+    if (p == "/") continue;
+    np = p;
+    n = split(np, a, "/");
+    # print "NP " np
+    for (i = n; i > 1; i--) {
+      sub("/" a[i] "$", "", np);
+      if (np == "") np = "/";
+      # print " pNP ", np
+      T[np] += sz[p];
+      # print "add " sz[p] " to " np " for " p " -> " T[np]
+    }
+  }
+  min = T["/"];
+  totsp = 70000000;
+  isfree = totsp - T["/"];
+  # print "isfree = " isfree
+  need = 30000000;
+  del = need - isfree;
+  for (p in T) {
+  # print p, T[p], (T[p] > del)
+    if (T[p] <= 100000) {
+     gt += T[p];
+    }
+    if (T[p] > del && T[p] < min) {
+      min = T[p];
+      minP = p;
+    }
+  }
+  print gt
+  print min, minP
+  # print T["/"]
+}' $1
+# /d 24933642
+# /a/e 584
+# /a 94269
+# / 23352670
