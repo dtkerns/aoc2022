@@ -1,0 +1,80 @@
+awk 'BEGIN {
+FS="";
+}
+{ 
+  mx = NF;
+  #printf " %d: ", NR
+  for (i = 1; i <= NF; i++) {
+    d[NR,i] = $i;
+    #printf " %d", $i
+  }
+  #print ""
+}
+function isvis(y,x, i,j,vl,vr,vu,vd) {
+  vl = 1;
+  vr = 2;
+  vu = 3;
+  vd = 4;
+  for (i = x - 1; i > 0; i--) {
+    if (d[y,i] >= d[y,x]) { vl = 0; break }
+  }
+  if (vl > 0) return vl;
+  for (i = x + 1; i <= mx; i++) {
+    if (d[y,i] >= d[y,x]) { vr = 0; break }
+  }
+  if (vr > 0) return vr;
+  for (i = y - 1; i > 0; i--) {
+    if (d[i,x] >= d[y,x]) { vu = 0; break }
+  }
+  if (vu > 0) return vu;
+  for (i = y + 1; i <= my; i++) {
+    if (d[i,x] >= d[y,x]) { vd = 0; break }
+  }
+  return vd;
+}
+function vdis(y,x, i,j,dl,dr,du,dd) {
+  dl = 1;
+  dr = 1;
+  du = 1;
+  dd = 1;
+  for (i = x - 1; i > 1; i--) {
+    if (d[y,i] >= d[y,x]) break;
+    dl++;
+  }
+  for (i = x + 1; i < mx; i++) {
+    if (d[y,i] >= d[y,x]) break;
+    dr++;
+  }
+  for (i = y - 1; i > 1; i--) {
+    if (d[i,x] >= d[y,x]) break;
+    du++;
+  }
+  for (i = y + 1; i < my; i++) {
+    if (d[i,x] >= d[y,x]) break;
+    dd++;
+  }
+  #print dl, dr, du, dd
+  return dl * dr * du * dd;
+}
+END {
+  my = NR;
+  mxz = 0;
+  v = 2 * mx + 2 * my - 4;
+  for (y = 2; y < my; y++) {
+    for (x = 2; x < mx; x++) {
+      z = isvis(y,x);
+      if (z > 0) {
+        #print y,x, d[y,x],"is visible", z
+        v++;
+      }
+      Z = vdis(y,x);
+      # print "Dist", y,x,Z
+      if (Z > mxz) {
+        mxz = Z;
+        myZ = y;
+        mxZ = x;
+      }
+    }
+  }
+  print v, mxz, "@", myZ, mxZ;
+}' $1

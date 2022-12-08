@@ -1,0 +1,66 @@
+awk 'BEGIN {
+FS="";
+#V[2,2]=1
+#V[2,3]=1
+#V[3,2]=1
+#V[3,4]=1
+#V[4,3]=1
+}
+{ 
+  mx = NF;
+  #printf " %d: ", NR
+  for (i = 1; i <= NF; i++) {
+    d[NR,i] = $i;
+    #printf " %d", $i
+  }
+  #print ""
+}
+function isvis(y,x, i,j,vl,vr,vu,vd) {
+  vl = 1;
+  vr = 2;
+  vu = 3;
+  vd = 4;
+  for (i = x - 1; i > 0; i--) {
+    #print "L", y,i,d[y,i], y,x,d[y,x], (d[y,i] > d[y,x])
+    if (d[y,i] >= d[y,x]) {
+      #print y,x,d[y,x], "blocked by", y,i, d[y,i]
+      vl = 0; break }
+  }
+  if (vl > 0) return vl;
+  for (i = x + 1; i <= mx; i++) {
+    #print "R",y,i,d[y,i], y,x,d[y,x], (d[y,i] > d[y,x])
+    if (d[y,i] >= d[y,x]) {
+      #print y,x,d[y,x], "blocked by", y,i, d[y,i]
+      vr = 0; break }
+  }
+  if (vr > 0) return vr;
+  for (i = y - 1; i > 0; i--) {
+    if (d[i,x] >= d[y,x]) {
+      #print "U",y,x,d[y,x], "blocked by", i,x, d[i,x]
+      vu = 0; break }
+  }
+  if (vu > 0) return vu;
+  for (i = y + 1; i <= my; i++) {
+    if (d[i,x] >= d[y,x]) {
+      #print "D",y,x,d[y,x], "blocked by", i,x, d[i,x]
+      vd = 0; break }
+  }
+  return vd;
+}
+END {
+  my = NR;
+  v = 2 * mx + 2 * my - 4;
+  for (y = 2; y < my; y++) {
+    for (x = 2; x < mx; x++) {
+      z = isvis(y,x);
+      if (z > 0) {
+        #if (V[y,x] != 1) print "BUG @ ", y,x
+        #print y,x, d[y,x],"is visible", z
+        v++;
+      #} else {
+        #if (V[y,x] == 1) print "invis BUG @ ", y,x
+      }
+    }
+  }
+  print v;
+}' $1
