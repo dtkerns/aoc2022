@@ -1,0 +1,61 @@
+awk 'BEGIN {
+ sx = 1;
+ sy = 1;
+ hx = 1;
+ hy = 1;
+ tx = 1;
+ ty = 1;
+ V[ty" "tx]++;
+}
+function abs(v) {
+ if (v < 0) return -v;
+ return v;
+}
+function moveR(     dx) {
+  #print "R"
+  dx = abs(hx - tx);
+  if (dx > 1) {
+    tx++;
+    #print "ydiff " hy - ty
+    ty += (hy - ty);
+  }
+}
+function moveL(     dx) {
+  #print "L"
+  dx = abs(hx - tx);
+  if (dx > 1) {
+    tx--;
+    #print "ydiff " hy - ty
+    ty += (hy - ty);
+  }
+}
+function moveU(     dy) {
+  #print "U"
+  dy = abs(hy - ty);
+  if (dy > 1) {
+    ty++;
+    #print "xdiff " hx - tx
+    tx += (hx - tx);
+  }
+}
+function moveD(     dy) {
+  #print "D"
+  dy = abs(hy - ty);
+  if (dy > 1) {
+    ty--;
+    #print "xdiff " hx - tx
+    tx += (hx - tx);
+  }
+}
+function pp( i) {
+  #print "PP -> ", hy, hx, ty, tx, length(V);
+  # for (i in V) print i
+}
+#{ print "===== move " $1 " for " $2 }
+$1 == "R" { for (i = 0; i < $2; i++) { hx++; moveR(); V[ty" "tx]++; pp() } }
+$1 == "L" { for (i = 0; i < $2; i++) { hx--; moveL(); V[ty" "tx]++; pp() } }
+$1 == "U" { for (i = 0; i < $2; i++) { hy++; moveU(); V[ty" "tx]++; pp() } }
+$1 == "D" { for (i = 0; i < $2; i++) { hy--; moveD(); V[ty" "tx]++; pp() } }
+END {
+  print length(V);
+}' $1

@@ -1,0 +1,60 @@
+awk 'BEGIN {
+ sx = 20;
+ sy = 20;
+ for (i = 0; i < 10; i++) {
+   tx[i] = sx;
+   ty[i] = sy;
+ }
+ V[ty[9]" "tx[9]]++;
+}
+function abs(v) {
+ if (v < 0) return -v;
+ return v;
+}
+function move(i,  dx, dy, m) {
+  dx = tx[i] - tx[i+1];
+  dy = ty[i] - ty[i+1];
+  #print "move", i+1, ty[i+1], tx[i+1], dy, dx
+  if (abs(dx) == 2 || abs(dy) == 2) {
+    tx[i+1] += dx < 0 ? -1 : dx > 0 ? 1 : 0;
+    ty[i+1] += dy < 0 ? -1 : dy > 0 ? 1 : 0;
+    #print "moving", i, "to", ty[i], tx[i]
+    if (i == 8) V[ty[9] " " tx[9]]++
+  #} else {
+    #print "no move", i+1
+  }
+}
+function pp(debug,   i, x, y, f) {
+  if (debug == 0) return;
+  for (y = MAXY; y > MINY; y--) {
+    printf "%3d: ", y
+    for (x = MINX; x < MAXX; x++) {
+      f = 0;
+      for (i = 0; i < 10; i++) {
+        if (tx[i] == x && ty[i] == y) { f = 1; break }
+      }
+      if (f) { if (i == 0) printf "H"; else printf "%d", i}
+      else if (y == sy && x == sx) printf "s"
+      else if ((y " " x) in V) printf "#"
+      else printf "."
+    }
+    print ""
+  }
+  printf "     12345678901234567890123456789012345678901234567890123456789012345678901234567890\n"
+  printf "              1         2         3         4         5         6         7         8\n\n"
+}
+#{ print "===== move " $1 " for " $2 }
+$1 == "R" { for (i = 0; i < $2; i++) { tx[0]++; for (j = 0; j < 10; j++) move(j); pp(0) } }
+$1 == "L" { for (i = 0; i < $2; i++) { tx[0]--; for (j = 0; j < 10; j++) move(j); pp(0) } }
+$1 == "U" { for (i = 0; i < $2; i++) { ty[0]++; for (j = 0; j < 10; j++) move(j); pp(0) } }
+$1 == "D" { for (i = 0; i < $2; i++) { ty[0]--; for (j = 0; j < 10; j++) move(j); pp(0) } }
+{
+if (ty[0] > MAXY) MAXY = ty[0];
+if (ty[0] < MINY) MINY = ty[0];
+if (tx[0] > MAXX) MAXX = tx[0];
+if (tx[0] < MINX) MINX = tx[0];
+}
+END {
+  pp(0);
+  print length(V);
+}' $1
