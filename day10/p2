@@ -1,0 +1,31 @@
+awk 'BEGIN {
+  X=1;
+  C=1;
+  coi[20]=coi[60]=coi[100]=coi[140]=coi[180]=coi[220]=1; # cycles of interest
+  W[39]=W[79]=W[119]=W[159]=W[199]=W[239]=1; # wrap CRT
+}
+function chk()
+{
+  if (C in coi)S+=C*X
+}
+function crt(  c)
+{
+  c = (C % 40) - 1;
+  CRT[C-1] = (c >= X-1 && c <= X+1) ? "#" : ".";
+  if (C-1 == 159) {
+    print "======", C, X-1, c, X+1
+  }
+}
+$1=="addx"{
+  crt(); C++; chk();
+  crt(); C++; X += $2; chk();
+}
+$1=="noop"{crt();C++;chk();}
+END {
+  print S
+  for (i = 0; i <= 240; i++) {
+    printf "%c", CRT[i]
+    if (i in W) printf "\n" 
+  }
+  print ""
+}' $1
