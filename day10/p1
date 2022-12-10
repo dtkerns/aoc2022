@@ -1,0 +1,29 @@
+awk 'BEGIN {
+  X=1
+  i = 20;
+  while ( i < 221) {
+   coi[i] = 1;
+   i+= 40;
+  } 
+  #for (i in coi) print i; print "===="
+  C = 1;
+}
+function add()
+{
+  if (C in coi) {
+    S += C * X;
+    print C, X, C*X, S, "==========="
+  }
+}
+$1=="addx"{
+  C++; add();
+  X += $2;
+  C++; add();
+  print "     ADD ", $2, X, C
+}
+$1 == "noop"{ C++; add(); print "     NOP", X, C
+}
+#{ print "cycles:", C}
+END {
+  print S
+}' $1
