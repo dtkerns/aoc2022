@@ -1,0 +1,34 @@
+awk '
+$1=="Monkey"{nm=$2+0;icnt[nm]=0; next}
+$1=="Starting"{itm=$0;sub("  Starting items: ", "", itm);gsub(",","",itm);items[nm]=itm; next}
+$1=="Operation:"{op1[nm]=$(NF-2);op[nm]=$(NF-1);op2[nm]=$NF; next}
+$1=="Test:"{test[nm]=$NF; next}
+$2=="true:"{true[nm]=$NF; next}
+$2=="false:"{false[nm]=$NF; next}
+function doop(old, op1, op, op2,   v)
+{
+  if (op2 == "old") v = old
+  else v = op2;
+  if (op == "+") return old + v;
+  return old * v;
+}
+END{
+  for (r=1;r<=20;r++) { # 20 rounds
+    for (m=0;m<=nm;m++) { # for each monkey
+      n=split(items[m],a," ");
+      items[m]="";
+      for (i=1;i<=n;i++) { # for each item
+        icnt[m]++;
+        worry = int(doop(a[i], op1[m],op[m],op2[m]) / 3);
+        if (worry % test[m] == 0) {
+          items[true[m]] = items[true[m]] " " worry
+        } else {
+          items[false[m]] = items[false[m]] " " worry
+        }
+      }
+    }
+  }
+  asort(icnt);
+  l = length(icnt);
+  print icnt[l-1]*icnt[l];
+}' $1
