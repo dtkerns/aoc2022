@@ -1,0 +1,52 @@
+awk '
+NF==0{next}
+function isList(s)
+{
+  return substr(s,1,1) == "["
+}
+function nextitemlen(s   ,np,sl,i,c)
+{
+  sl = length(s);
+  for (i=1;i<=sl;i++) {
+    c = substr(s,i,1);
+    if (np == 0 && c == ",") return i;
+    if (c == "[") np++;
+    else if (c == "]") np--;
+  }
+  return i;
+}
+function ordergood(left, right, n, li, ri, rv)
+{
+  #print "OG", left " VS " right
+  if (isList(left) && isList(right)) {
+    left = substr(left, 2, length(left)-2);
+    right = substr(right, 2, length(right)-2);
+    n = nextitemlen(left); li = substr(left,1, n-1); left = substr(left, n+1);
+    n = nextitemlen(right); ri = substr(right,1, n-1); right = substr(right, n+1);
+    while (li != "" || ri != "") {
+      if (li == "") return 1;
+      if (ri == "") return -1;
+      rv = ordergood(li, ri);
+      if (rv != 0) return rv;
+      n = nextitemlen(left); li = substr(left, 1, n-1); left = substr(left, n+1);
+      n = nextitemlen(right); ri = substr(right, 1, n-1); right = substr(right, n+1);
+    }
+    return 0;
+  }
+  if (isList(left)) return ordergood(left, "[" right "]");
+  if (isList(right)) return ordergood("[" left "]", right);
+  #print "FIN", right, left, right - left
+  return right - left
+}
+{
+  idx++;
+  left = $0;
+  getline right;
+  if (ordergood(left, right) > 0) {
+    # print idx
+    sum += idx;
+  }
+}
+END {
+  print sum
+}' $1
