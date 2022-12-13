@@ -1,0 +1,43 @@
+gawk 'BEGIN{
+FS=""
+SUBSEP=","
+for(i=1;i<27;i++)elev[sprintf("%c",96+i)]=i;
+elev["E"]=0
+elev["S"]=99
+}
+{
+  #print $0
+  MX=NF;
+  MY=NR;
+  y=NR
+  for (x=1;x<=MX;x++) {
+    if ($x=="S") { Sy=y; Sx=x; print "#S",y,x}
+    if ($x=="E") { Ey=y; Ex=x; print "#E",y,x}
+    g[y,x] = elev[$x];
+    #print y,x, $x, g[y,x]
+  }
+}
+function pp(  x, y) {
+  for (y=1;y<=MY;y++) {
+    for (x=1;x<=MX;x++) {
+      printf(" %2d", g[y,x])
+    }
+    print ""
+  }
+}
+function getEdges( x, y)
+{
+  for (y=1;y<=MY;y++) {
+    for (x=1;x<=MX;x++) {
+      if (y>1 && g[y,x]+1 >= g[y-1,x]) E[y,x " " y-1,x]=1 # path up
+      if (y<MY && g[y,x]+1 >= g[y+1,x]) E[y,x " " y+1,x]=1 # path down
+      if (x>1 && g[y,x]+1 >= g[y,x-1]) E[y,x " " y,x-1]=1 # path left
+      if (x<MX && g[y,x]+1 >= g[y,x+1]) E[y,x " " y,x+1]=1 # path right
+    }
+  }
+}
+END {
+  getEdges()
+  cmd = "gawk -vu=" Sy "," Sx " -vt=" Ey "," Ex " -vdir=D -f dykstra.awk -"
+  for (i in E) print i, E[i] | cmd
+}' $1
