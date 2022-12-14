@@ -28,12 +28,12 @@ function pp(  x, y)
     if (y>maxy)maxy=y;
     if (i > 1) {
       if (x == lx) {
-        print "loop y", ly, y, "step", (ly > y ? -1 : 1)
+        #print "loop y", ly, y, "step", (ly > y ? -1 : 1)
         for (yi = ly; yi != y; yi += (ly > y ? -1 : 1)) {
           g[yi,x]=1;
         }
       } else if (y == ly) {
-        print "loop x", lx, x, "step", (lx > x ? -1 : 1)
+        #print "loop x", lx, x, "step", (lx > x ? -1 : 1)
         for (xi = lx; xi != x; xi += (lx > x ? -1 : 1)) {
           g[y,xi]=1;
         }
@@ -54,16 +54,14 @@ END {
   for (xi = minx; xi <= maxx; xi++) {
      g[FLy,xi]=1
   }
-  pp();
+  #pp();
   full = 0;
   while (!full) {
-    numS++
     rx=Sx;ry=Sy;
     if (and(g[ry,rx],3) != 2) { break; }
     canmove = 1
     while (canmove) {
       drop();
-      
       if (and(g[ry+1,rx-1],3)==0) {
         if (rx-1>minx) {
           rx--;
@@ -82,12 +80,13 @@ END {
         }
       } else {
         g[ry,rx]=3;
-        print numS
+        numS++;
+        #print numS
         break;
       }
     }
     #pp();
   }
-  print numS-1
-  pp();
+  print numS
+  #pp();
 }' $1
