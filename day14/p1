@@ -39,8 +39,8 @@ function pp(  x, y)
         }
       }
     }
-    lx=a[1];
-    ly=a[2];
+    lx=x
+    ly=y
   }
 }
 function drop()
@@ -48,7 +48,7 @@ function drop()
   while (and(g[ry+1,rx],3)==0 && ry < maxy) ry++;
   if (ry >= maxy) {
     canmove = 0
-    full=1
+    full = 1
   }
 }
 END {
@@ -60,23 +60,11 @@ END {
     while (canmove) {
       drop();
       if (and(g[ry+1,rx-1],3)==0) {
-        if (rx-1>minx) {
-          rx--;
-          continue;
-        } else {
-          full = 1;
-          canmove = 0;
-          break;
-        }
+        rx--;
+        continue;
       } else if (and(g[ry+1,rx+1],3)==0) {
-        if (rx+1<maxx) {
-          rx++;
-          continue
-        } else {
-          full = 1;
-          canmove = 0;
-          break;
-        }
+        rx++;
+        continue
       } else {
         g[ry,rx]=3;
         numS++;
