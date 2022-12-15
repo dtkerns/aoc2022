@@ -1,0 +1,60 @@
+awk -v y=$2 'BEGIN {
+SUBSEP = ",";
+}
+function abs(a)
+{
+  if (a < 0) return -a;
+  return a;
+}
+function pv(v,  a)
+{
+  split(v, a, "=");
+  sub(/[,:]/,"",a[2]);
+  return a[2]+0;
+}
+function dist(x1,y1,x2,y2)
+{
+  return abs(x1-x2)+abs(y1-y2);
+}
+{
+  #print $0
+  sy = pv($4); sx = pv($3); by = pv($10); bx = pv($9);
+  if (NR == 1) { minx = maxx = sx; }
+  g[sy,sx]="S";
+  g[by,bx]="B";
+  S[sy,sx]= dist(sx,sy,bx,by); # dist to closest beacon
+  SS[sy,sx] = NR;
+  hd = sx - (S[sy,sx]-1);
+  if (hd < minx) minx = hd
+  hd = sx + S[sy,sx] - 1;
+#print "hd", hd, "sx", sx, "dist", S[sy,sx]
+  if (hd > maxx) maxx = hd
+  #print NR, "Sensor @",sy,sx, "dist", S[sy,sx], "beacon @", by,bx, "minx",minx,"maxx",maxx
+}
+END {
+ #  minx = -4; maxx = 26;
+  #print "minx",minx,"maxx",maxx
+  for (s in S) { # each sensor
+    split(s,a,SUBSEP);
+    d = dist(a[2],a[1],a[2],y)
+    if (d > S[s]) {
+      #print "skip", SS[s], "@", s, "dist",d, "from",y,"beacon", S[s]
+      continue; # this sensor has no data for line y
+    }
+    #print "do", SS[s], "@", s, "dist",d, "from",y,"beacon", S[s]
+    for (X = a[2]; X >= minx; X--) {
+      if (dist(a[2],a[1],X,y) <= S[s]) {
+        if (!((y SUBSEP X) in g)) g[y,X]="X";
+      }
+    }
+    #printf "L:"; for (X = minx; X <= maxx; X++) { printf("%c", ((y SUBSEP X) in g) ? g[y,X] : "."); } print "";
+    for (X = a[2]+1; X <= maxx; X++) {
+      if (dist(a[2],a[1],X,y) <= S[s]) {
+        if (!((y SUBSEP X) in g)) g[y,X]="X";
+      }
+    }
+    #printf "R:"; for (X = minx; X <= maxx; X++) { printf("%c", ((y SUBSEP X) in g) ? g[y,X] : "."); } print "";
+  }
+  for (X = minx; X <= maxx; X++) if (g[y,X] == "X") cnt++
+  print cnt
+}' $1
