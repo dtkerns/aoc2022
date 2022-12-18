@@ -1,15 +1,15 @@
 awk -F, 'BEGIN {
   SUBSEP = ","
+  dx[0] = dy[1] = dz[2] = -1
+  dx[3] = dy[4] = dz[5] = 1
 }
-NR==1{
-  minx=maxx=$1
-  miny=maxy=$2
-  minz=maxz=$3
-}
+NR==1{ minx=maxx=$1; miny=maxy=$2; minz=maxz=$3; }
 { 
   x[NR]=$1
   y[NR]=$2
   z[NR]=$3
+  ex[NR] = 6
+  cord[NR] = $0
   b[$3,$2,$1] = 1
   if ($1<minx)minx=$1
   if ($1>maxx)maxx=$1
@@ -19,26 +19,54 @@ NR==1{
   if ($3>maxz)maxz=$3
   #print NR, $0
 }
-function abs(a) {
-  if (a < 0) return -a
-  return a
+function abs(a) { if (a < 0) return -a; return a }
+function dist(i,j, xd, yd, zd, d) { return abs(x[i]-x[j]) + abs(y[i]-y[j]) + abs(z[i]-z[j]) }
+function numadj(blk, a,    i, n,xi,yi,zi) {
+   $0=blk;zi=$1;yi=$2;xi=$3
+   for (i = 0; i < 6; i++)
+     if (zi+dz[i] SUBSEP yi+dy[i] SUBSEP xi+dx[i] in a)
+       n++
+   return n
 }
-function dist(i,j, xd, yd, zd, d) {
-  return abs(x[i]-x[j]) + abs(y[i]-y[j]) + abs(z[i]-z[j])
+function removeshell(empty, shell,  blk,nshell,xi,yi,zi)
+{
+  if (length(shell) == 0) return
+  for (blk in shell) {
+    delete empty[blk]
+    $0 = blk; zi=$1; yi=$2; xi=$3
+    for (i = 0; i < 6; i++) {
+      if (zi+dz[i] SUBSEP yi+dy[i] SUBSEP xi+dx[i] in empty) {
+        nshell[zi+dz[i], yi+dy[i], xi+dx[i]]=1
+      }
+    }
+  }
+  delete shell
+  removeshell(empty, nshell)
 }
 END {
-  print minz, maxz, miny, maxy, minx, maxx
-  for (zi = minz; zi <= maxz; zi++) {
-    for (yi = miny; yi <= maxy; yi++) {
-      for (xi = minx; xi <= maxx; xi++) {
-        if ((zi SUBSEP yi SUBSEP xi) in b) {
-          printf "X"
-        } else {
-          printf "."
-        }
+  for (i = 1; i < NR; i++) {
+    for (j = i+1; j <= NR; j++) {
+      if (dist(i,j) == 1) {
+        ex[i]--
+        ex[j]--
       }
-      printf "\n"
     }
-    printf "\n"
   }
-}' $1
+  for (i in ex) {
+    t += ex[i]
+  }
+  print "part 1", t
+  minz--; maxz++; miny--; maxy++; minx--; maxx++
+  for (zi = minz; zi <= maxz; zi++)
+    for (yi = miny; yi <= maxy; yi++)
+      for (xi = minx; xi <= maxx; xi++)
+        if (!(zi SUBSEP yi SUBSEP xi in b))
+          empty[zi,yi,xi]=1
+  shell[minz,miny,minx]=1
+  removeshell(empty, shell)
+  for (blk in empty) {
+    s += 6 - numadj(blk, empty)
+  }
+  print "part 2", t - s
+}
+' $1
