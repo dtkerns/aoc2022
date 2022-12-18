@@ -177,8 +177,8 @@ END {
            nth = th + N * Lth
            r += N * Lr
            posy = nth + 4
-           # now copy the last Lth rows to the new top
-           for (y = -Lth; y <= 0; y++) {
+           # now copy the last 10 rows to the new top
+           for (y = -10; y <= 0; y++) {
              for (x = 1; x <= gridwidth; x++) {
                g[nth + y,x] = g[th + y,x]
              }
