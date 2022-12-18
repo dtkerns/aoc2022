@@ -1,0 +1,181 @@
+awk 'BEGIN {
+FS = ""
+gridwidth = 7
+# ####
+p[0,"y",0] = 0
+p[0,"x",0] = 0
+p[0,"y",1] = 0
+p[0,"x",1] = 1
+p[0,"y",2] = 0
+p[0,"x",2] = 2
+p[0,"y",3] = 0
+p[0,"x",3] = 3
+np[0] = 4 # number pieces on shape
+#pw[0] = 4 # width from handle
+ph[0] = 0 # height above handle
+mx[0] = gridwidth - 3 # max x
+
+# .#.
+# ###
+# .#. < handle is .
+p[1,"y",0] = 0
+p[1,"x",0] = 1
+p[1,"y",1] = 1
+p[1,"x",1] = 0
+p[1,"y",2] = 1
+p[1,"x",2] = 1
+p[1,"y",3] = 1
+p[1,"x",3] = 2
+p[1,"y",4] = 2
+p[1,"x",4] = 1
+np[1] = 5
+#pw[1] = 3
+ph[1] = 2
+mx[1] = gridwidth - 2
+
+# ..#
+# ..#
+# ###
+p[2,"y",0] = 0
+p[2,"x",0] = 0
+p[2,"y",1] = 0
+p[2,"x",1] = 1
+p[2,"y",2] = 0
+p[2,"x",2] = 2
+p[2,"y",3] = 1
+p[2,"x",3] = 2
+p[2,"y",4] = 2
+p[2,"x",4] = 2
+np[2] = 5
+#pw[2] = 3
+ph[2] = 2
+mx[2] = gridwidth - 2
+
+# #
+# #
+# #
+# #
+p[3,"y",0] = 0
+p[3,"x",0] = 0
+p[3,"y",1] = 1
+p[3,"x",1] = 0
+p[3,"y",2] = 2
+p[3,"x",2] = 0
+p[3,"y",3] = 3
+p[3,"x",3] = 0
+np[3] = 4
+#pw[3] = 1
+ph[3] = 3
+mx[3] = gridwidth - 0
+
+# ##
+# ##
+p[4,"y",0] = 0
+p[4,"x",0] = 0
+p[4,"y",1] = 0
+p[4,"x",1] = 1
+p[4,"y",2] = 1
+p[4,"x",2] = 0
+p[4,"y",3] = 1
+p[4,"x",3] = 1
+np[4] = 4
+#pw[4] = 2
+ph[4] = 1
+mx[4] = gridwidth - 1
+}
+{ 
+  for (i = 1; i <= NF; i++) M[i] = $i
+}
+function getNextMove()
+{
+  if (++midx > NF) midx = 1;
+  return M[midx];
+}
+function tryMove(   nposx,i,y,x,blocked)
+{
+  if (move == "<") {
+    if (posx == 1) {
+      return 1
+    }
+    nposx = posx - 1
+  } else {
+    if (posx >= mx[P]) {
+      return mx[P]
+    }
+    nposx = posx + 1
+  }
+  blocked = 0
+  for (i = 0; i < np[P]; i++) {
+    if (g[posy+p[P,"y",i],nposx+p[P,"x",i]] == "#") {
+      blocked = 1;
+      break;
+    }
+  }
+  if (blocked == 1) return posx
+  return nposx
+}
+function tryDrop(    nposy,i,y,x,blocked)
+{
+  if (posy <= 1) return 0
+  nposy = posy - 1
+  blocked = 0
+  for (i = 0; i < np[P]; i++) {
+    if (g[nposy+p[P,"y",i],posx+p[P,"x",i]] == "#") {
+      blocked = 1;
+      break;
+    }
+  }
+  return !blocked
+}
+function addtogrid(posx, posy, th,    i,n,a)
+{
+  #print "addtogrid th", th, "posy", posy, "phP", ph[P]
+  for (i = 0; i < np[P]; i++) {
+    g[posy+p[P,"y",i],posx+p[P,"x",i]]="#"
+  }
+
+  if (posy+ph[P] <= th) return th == 0 ? 1 : th
+  return posy+ph[P]  
+}
+function pp( y,x)
+{
+   for (y = th+6;y>0;y--) {
+     printf("|");
+     for (x = 1; x <= gridwidth; x++) {
+       if (posy == y && posx == x) {
+         printf("H"); // only the handle of a falling piece
+       } else {
+         printf("%c", g[y,x] ? g[y,x] : ".");
+       }
+     }
+     printf("|\n");
+   }
+   printf("+-------+\n\n");
+}
+END {
+  gh = 4
+  th = 0
+  midx = 0
+  for (r = 0; r < 2022; r++) {
+     P = r % 5
+     #print "rock", r, "P", P, "th", th
+     posx = 3
+     posy = th + 4
+     candrop = 1;
+     #pp()
+     while (candrop == 1) {
+       move = getNextMove()
+       posx = tryMove()
+       #print "posy", posy, "posx", posx, "after move", move == ">" ? "right" : "left", midx
+       #pp()
+       candrop = tryDrop()
+       #print "candrop", candrop, "posy", posy
+       if (candrop == 1) {
+          posy--
+       } else {
+         th = addtogrid(posx, posy, th)
+       }
+     }
+   }
+   print th
+}' $1
