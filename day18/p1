@@ -1,0 +1,38 @@
+awk -F, 'BEGIN {
+}
+{ 
+  x[NR]=$1
+  y[NR]=$2
+  z[NR]=$3
+  ex[NR] = 6
+  #print NR, $0
+}
+function abs(a) {
+  if (a < 0) return -a
+  return a
+}
+function dist(i,j, xd, yd, zd, d) {
+  return abs(x[i]-x[j]) + abs(y[i]-y[j]) + abs(z[i]-z[j])
+  #xd = abs(x[i]-x[j])
+  #yd = abs(y[i]-y[j])
+  #zd = abs(z[i]-z[j])
+  #print "   ",i,j
+  #print "    ", x[i], x[j], xd
+  #print "    ", y[i], y[j], yd
+  #print "    ", z[i], z[j], zd
+  #d = xd + yd + zd
+  #print "     ",d
+  #return d
+}
+END {
+  for (i = 1; i < NR; i++) {
+    for (j = i+1; j <= NR; j++) {
+      if (dist(i,j) == 1) {
+        ex[i]--
+        ex[j]--
+      }
+    }
+  }
+  for (i in ex) t += ex[i]
+  print t
+}' $1
