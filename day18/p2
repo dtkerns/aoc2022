@@ -1,0 +1,44 @@
+awk -F, 'BEGIN {
+  SUBSEP = ","
+}
+NR==1{
+  minx=maxx=$1
+  miny=maxy=$2
+  minz=maxz=$3
+}
+{ 
+  x[NR]=$1
+  y[NR]=$2
+  z[NR]=$3
+  b[$3,$2,$1] = 1
+  if ($1<minx)minx=$1
+  if ($1>maxx)maxx=$1
+  if ($2<miny)miny=$2
+  if ($2>maxy)maxy=$2
+  if ($3<minz)minz=$3
+  if ($3>maxz)maxz=$3
+  #print NR, $0
+}
+function abs(a) {
+  if (a < 0) return -a
+  return a
+}
+function dist(i,j, xd, yd, zd, d) {
+  return abs(x[i]-x[j]) + abs(y[i]-y[j]) + abs(z[i]-z[j])
+}
+END {
+  print minz, maxz, miny, maxy, minx, maxx
+  for (zi = minz; zi <= maxz; zi++) {
+    for (yi = miny; yi <= maxy; yi++) {
+      for (xi = minx; xi <= maxx; xi++) {
+        if ((zi SUBSEP yi SUBSEP xi) in b) {
+          printf "X"
+        } else {
+          printf "."
+        }
+      }
+      printf "\n"
+    }
+    printf "\n"
+  }
+}' $1
