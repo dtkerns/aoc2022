@@ -1,0 +1,28 @@
+awk 'BEGIN {
+FS="[ =;,]+"
+}
+{
+  rate[$2] = $6
+  to[$2] = $11
+  for (i = 12; i <= NF; i++) {
+    to[$2] = to[$2] "," $i
+  }
+}
+function makegraph( out,e,n,a,i)
+{
+  out = FILENAME ".dot"
+  print "digraph G {" > out
+  printf("AA_%d [color=green];\n", rate["AA"]) > out
+  for (e in rate) {
+    n=split(to[e],a,",")
+    for (i=1;i<=n;i++)
+      print e "_" rate[e], "->", a[i] "_" rate[a[i]] ";" > out
+  }
+  print "}" > out
+  close(out)
+}
+END {
+  min = 1
+  open = ""
+  makegraph()
+}' $1
