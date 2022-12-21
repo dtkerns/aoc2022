@@ -1,11 +1,13 @@
 awk 'BEGIN {
 FS="[ :]+"
+# inverse operators
 iop["/"] = "*"
 iop["*"] = "/"
 iop["+"] = "-"
 iop["-"] = "+"
 #print "scale=5;" |& "bc"
 }
+# build the expressions
 NF == 2 {
   if ($1 == "humn")
     e[$1] = "X"
@@ -19,18 +21,19 @@ NF == 4 {
     e[$1] = "(" $2 $3 $4 ")"
 }
 END {
+  # combine them all into 1 expression
   while (length(e) > 1) {
     for (i in e) {
        if (e["root"] ~ i) {
          sub(i, e[i], e["root"])
          delete e[i]
-       } else {
        }
     }
   }
   #print e["root"] # wow!
+  # split into 2 sides on the ==
   split(e["root"], a, "==")
-  if (a[1] ~ "X") {
+  if (a[1] ~ "X") { # the side with the X is the expresion, the other side can be reduced to a constant
     ee = a[1]
     con = a[2]
   } else {
@@ -40,7 +43,7 @@ END {
   print con |& "bc"
   "bc" |& getline con
   #print ee "=" con
-  while (ee != "X") {
+  while (ee != "X") { # now reduce ALL "(literal op literal)" to "literal"
     n = match(ee, /[(][0-9]+[+-/*][0-9]+[)]/, a)
     if (n > 0) {
       print a[0] |& "bc"
@@ -51,14 +54,16 @@ END {
       #print "-------"
     } else break
   }
+  # here is the reduced equation... now solve it
   print "solve for X: " ee "=" con
   while (ee != "X") {
+    # check for (literal op blah) ... special case (literal - blah) ... FIXME: fails if literal < 0 (doesn't happen w/ this input)
     n = match(ee, /^[(]([0-9]+)([+-/*])(.*)[)]$/, a)
     #print n, "match left"
     if (n > 0) {
-      #print "C", a[1]
+      #print "lit", a[1]
       #print "op", a[2], "->", iop[a[2]]
-      #print "R", a[3]
+      #print "blah", a[3]
       if (a[2] == "-") {
         print con "-" a[1] |& "bc"
         "bc" |& getline con
@@ -70,16 +75,18 @@ END {
       }
       ee = a[3]
     }
+    # check for ( blah op literal )
     n = match(ee, /^[(](.*)([+-/*])([0-9]+)[)]$/, a)
     #print n, "match right"
     if (n > 0) {
-      #print "R", a[1]
+      #print "blah", a[1]
       #print "op", a[2], "->", iop[a[2]]
-      #print "C", a[3]
+      #print "lit", a[3]
       print con iop[a[2]] a[3] |& "bc"
       "bc" |& getline con
       ee = a[1]
     }
+    # show progress... or not
     #print ee "=" con
   }
   print con
