@@ -1,0 +1,17 @@
+awk 'BEGIN {
+FS="[ :]+"
+}
+NF == 2 { e[$1] = $2 }
+NF == 4 { e[$1] = "(" $2 $3 $4 ")" }
+END {
+  while (length(e) > 1) {
+    for (i in e) {
+       if (e["root"] ~ i) {
+         sub(i, e[i], e["root"])
+         delete e[i]
+       } else {
+       }
+    }
+  }
+  print e["root"] | "bc"
+}' $1

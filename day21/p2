@@ -1,0 +1,86 @@
+awk 'BEGIN {
+FS="[ :]+"
+iop["/"] = "*"
+iop["*"] = "/"
+iop["+"] = "-"
+iop["-"] = "+"
+#print "scale=5;" |& "bc"
+}
+NF == 2 {
+  if ($1 == "humn")
+    e[$1] = "X"
+  else
+    e[$1] = $2
+}
+NF == 4 {
+  if ($1 == "root")
+    e[$1] = $2 "==" $4 
+  else
+    e[$1] = "(" $2 $3 $4 ")"
+}
+END {
+  while (length(e) > 1) {
+    for (i in e) {
+       if (e["root"] ~ i) {
+         sub(i, e[i], e["root"])
+         delete e[i]
+       } else {
+       }
+    }
+  }
+  #print e["root"] # wow!
+  split(e["root"], a, "==")
+  if (a[1] ~ "X") {
+    ee = a[1]
+    con = a[2]
+  } else {
+    ee = a[2]
+    con = a[1]
+  }
+  print con |& "bc"
+  "bc" |& getline con
+  #print ee "=" con
+  while (ee != "X") {
+    n = match(ee, /[(][0-9]+[+-/*][0-9]+[)]/, a)
+    if (n > 0) {
+      print a[0] |& "bc"
+      "bc" |& getline nc
+      # print a[0] "->" nc
+      sub(/[(][0-9]+[+-/*][0-9]+[)]/, nc, ee)
+      #print ee
+      #print "-------"
+    } else break
+  }
+  print "solve for X: " ee "=" con
+  while (ee != "X") {
+    n = match(ee, /^[(]([0-9]+)([+-/*])(.*)[)]$/, a)
+    #print n, "match left"
+    if (n > 0) {
+      #print "C", a[1]
+      #print "op", a[2], "->", iop[a[2]]
+      #print "R", a[3]
+      if (a[2] == "-") {
+        print con "-" a[1] |& "bc"
+        "bc" |& getline con
+        print "-1*" con |& "bc"
+        "bc" |& getline con
+      } else {
+        print con iop[a[2]] a[1] |& "bc"
+        "bc" |& getline con
+      }
+      ee = a[3]
+    }
+    n = match(ee, /^[(](.*)([+-/*])([0-9]+)[)]$/, a)
+    #print n, "match right"
+    if (n > 0) {
+      #print "R", a[1]
+      #print "op", a[2], "->", iop[a[2]]
+      #print "C", a[3]
+      print con iop[a[2]] a[3] |& "bc"
+      "bc" |& getline con
+      ee = a[1]
+    }
+    #print ee "=" con
+  }
+  print con
+}' $1
