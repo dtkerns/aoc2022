@@ -1,0 +1,113 @@
+awk 'BEGIN{
+  FS=""
+  SUBSEP=","
+  pd[0] = ">"
+  pd[1] = "v"
+  pd[2] = "<"
+  pd[3] = "^"
+  id["L"] = -1
+  id["R"] = 1
+}
+NR==1{ sx = match($0,/[\.]/) }
+{
+   xb[NR,0] = match($0,/[\.#]/)
+  for (x=1;x<=NF;x++) {
+#print "x=",x,"|"$x"|"
+    g[NR,x] = ($x == " " ? -1 : $x == "." ? 1 : 2)
+  }
+  g[NR,NF+1]=-1
+  xb[NR,1] = NF+1
+  maxx=max(NF,maxx)
+}
+NF==0{getline m}
+
+function max(a,b) { if (a>b) return a; return b }
+function getdist( a) {
+  match(m, /^([0-9]+)(.*)$/, a)
+  m = a[2]
+  return a[1]
+}
+function getdir( a) {
+  match(m, /^([LR])(.*)$/, a)
+  m = a[2]
+  #print a[1], "|" m "|"
+  return a[1]
+}
+function pp( y,x,c) {
+  for (y = 1; y <= maxy; y++) {
+    for (x = 1; x <= maxx; x++) {
+      if (Y==y&&X==x) {
+        c = "[7m" pd[dir] "[m"
+      } else {
+        c = (g[y,x] <= 0) ? " " : (g[y,x] == 1) ? "." : "#"
+      }
+      printf("%s", c)
+    }
+if (Y == y) print "%%%%%%%%%%%%%";  else print ""
+  }
+  print ""
+}
+END {
+  maxy = NR
+  print "startx", sx, "maxx", maxx
+  X = sx
+  Y = 1
+  dir=0
+  #pp()
+  #I = 1
+  while (length(m) > 0) {
+    M = getdist()
+    #{ print "Move", M, pd[dir], Y, X; pp() }
+    for (i = 0; i < M; i++) {
+      nX = X
+      nY = Y
+      if (dir == 0) nX = X + 1
+      else if (dir == 2) nX = X - 1
+      else if (dir == 1) nY = Y + 1
+      else if (dir == 3) nY = Y - 1
+      wrap=0
+      if (nY < 1 || nY >= maxy || nX < 1 || nX >= maxx) wrap = 1;
+      if (wrap == 0 && g[nY,nX] == 2) break
+      if (wrap == 0 && g[nY,nX] == 1) { X = nX; Y = nY }
+      else {
+        if (dir == 0) { # wrap to left
+          for (nX = X; nX > 0 && g[nY,nX] > 0; nX--);
+          nX++
+
+          
+          if (g[nY,nX] == 2) break
+          else { X = nX; Y = nY }
+        } else if (dir == 2) { # wrap to right
+          for (nX = X; nX < maxx && g[nY,nX] > 0; nX++);
+
+          if (nX < maxx) nX-- # overshot
+          if (g[nY,nX] == 2) break
+          else { X = nX; Y = nY }
+        } else if (dir == 1) { # wrap to top
+          for (nY = Y; nY > 0 && g[nY,nX] > 0; nY--);
+
+          if (nY > 0) nY++ # overshot
+          if (g[nY,nX] == 2) break
+          else { X = nX; Y = nY }
+        } else { # wrap to bottom
+          for (nY = Y; nY <= maxy && g[nY,nX] > 0; nY++);
+
+          if (nY <= maxy) nY-- # overshot
+          if (g[nY,nX] == 2) break
+          else { X = nX; Y = nY }
+        }
+      }
+    }
+    print Y-1, X-1
+    #pp()
+    if (length(m) > 0) {
+      dir += id[getdir()]
+      if (dir < 0) dir=3
+      if (dir > 3) dir=0
+      #print "New dir", dir, pd[dir]
+    }
+  }
+  #pp()
+  print Y, X, dir, pd[dir]
+  print 1000 * Y + 4 * X + dir
+}' $1
