@@ -1,0 +1,97 @@
+awk 'BEGIN {
+FS="";
+SUBSEP = ",";
+nb = 0
+dx["S"]=0
+dy["S"]=0
+dx["U"]=0
+dy["U"]=-1
+dx["D"]=0
+dy["D"]=1
+dx["L"]=-1
+dy["L"]=0
+dx["R"]=1
+dy["R"]=0
+}
+NR == 1 { MaxX=NF; }
+{
+print $0
+ for (i = 1; i <= NF; i++) {
+   g[NR,i] = $i;
+   if ($i ~ /[<>^v]/) { blx[nb] = i; bly[nb] = NR; blD[nb++] = $i; }
+   if (NR == 1 && $i == ".") { EnterX = i; }
+   if (NR>1 && $0~/###/ && $i == ".") { MaxY = NR; ExitX = i; }
+ }
+}
+function pp(  y,x)
+{
+  for (y = 1; y <= MaxY; y++) {
+    for (x = 1; x <= MaxX; x++) {
+      printf("%c", g[y,x] ? g[y,x] "" : ".");
+    }
+    printf("  %d\n", y);
+  }
+  printf("\n");
+}
+function clearboard(  y,x)
+{
+  for (y = 2; y < MaxY; y++) {
+    for (x = 2; x < MaxX; x++) {
+      g[y,x] = ".";
+    }
+  }
+}
+function moveBlizards( b)
+{
+  clearboard();
+  for (b = 0; b < nb; b++) {
+    if (blD[b] == ">") { if (++blx[b] >= MaxX) blx[b] = 2; }
+    if (blD[b] == "<") { if (--blx[b] <= 1) blx[b] = MaxX-1; }
+    if (blD[b] == "v") { if (++bly[b] >= MaxY-1) bly[b] = 2; }
+    if (blD[b] == "^") { if (--bly[b] <= 1) bly[b] = MaxX-1; }
+    if (g[bly[b],blx[b]] == ".") g[bly[b],blx[b]] = blD[b];
+    else if (g[bly[b],blx[b]] ~ /[<>^v]/) g[bly[b],blx[b]] = "2";
+    else g[bly[b],blx[b]]++;
+  }
+}
+function posmov(mm,  pm)
+{
+  if (mm == 0) pm = "S"
+  if (Py > 1 && g[Py-1,Px] == ".") pm = pm "U"
+  if (Px > 1 && g[Py,Px-1] == ".") pm = pm "L"
+  if (Py < MaxY && g[Py+1,Px] == ".") pm = pm "D"
+  if (Px < MaxX && g[Py,Px+1] == ".") pm = pm "R"
+  return pm
+}
+END {
+  Py = 1; Px = EnterX;
+  print "numBlizards", nb
+  print "P:", Py, Px
+  print "G:", MaxY, ExitX
+  pp()
+  while (Py != maxY || Px != ExitX) {
+    moveBlizards()
+    mm = 0;
+    if (g[Py,Px] != "." && g[Py,Px] != "E") { mm = 1; print "Must move"}
+    pm = posmov(mm);
+    print "Possible moves", pm
+    lm = length(pm);
+    if (lm == 0) {
+      print "DEAD"
+    } else if (lm == 1) {
+      Py += dy[pm];
+      Px += dx[pm];
+      nummoves++
+    } else {
+      print "now what?"
+      mv = substr(pm, lm)
+      Py += dy[mv]
+      Px += dx[mv]
+      nummoves++
+    }
+    g[Py,Px] = "E";
+    pp()
+    if (Py == MaxY && Px == ExitX) break;
+  }
+  print Py,Px,"moves", nummoves
+}' $1
