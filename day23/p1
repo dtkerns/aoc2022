@@ -1,0 +1,183 @@
+awk 'BEGIN{
+FS=""
+SUBSEP=","
+o = 100; # avoid negative numbers
+numelf = 0
+ryd[0] = -1;
+ryd[1] = 1;
+ryd[2] = 0;
+ryd[3] = 0;
+rxd[0] = 0;
+rxd[1] = 0;
+rxd[2] = -1;
+rxd[3] = 1;
+#for (i=0;i<26;i++) ord[i] = sprintf("%c", 97+i);
+}
+{ print }
+{
+  for (i = 1; i <= NF; i++) {
+    g[NR+o,i+o]=$i
+    if ($i == "#") {
+      ey[numelf] = NR+o;
+      ex[numelf] = i+o;
+#print "elf", numelf, "@", ey[numelf], ex[numelf]
+      numelf++
+    }
+  }
+}
+function min(a,b){if(a<b)return a;return b}
+function max(a,b){if(a>b)return a;return b}
+function needmove(  i, eight)
+{
+  for (i = 0; i < numelf; i++) {
+    eight = (g[ey[i]-1,ex[i]-1] g[ey[i]-1,ex[i]] g[ey[i]-1,ex[i]+1] g[ey[i],ex[i]-1] g[ey[i],ex[i]+1] g[ey[i]+1,ex[i]-1] g[ey[i]+1,ex[i]] g[ey[i]+1,ex[i]+1])
+    #print i, eight
+    if (eight ~ "#") return 1
+  }
+  return 0
+}
+function checkN(i)
+{
+  if ((g[ey[i]-1,ex[i]-1] g[ey[i]-1,ex[i]] g[ey[i]-1,ex[i]+1]) ~ "#") return 1
+  return 0
+}
+function checkS(i)
+{
+  if ((g[ey[i]+1,ex[i]-1] g[ey[i]+1,ex[i]] g[ey[i]+1,ex[i]+1]) ~ "#") return 1
+  return 0
+}
+function checkW(i)
+{
+  if ((g[ey[i]-1,ex[i]-1] g[ey[i],ex[i]-1] g[ey[i]+1,ex[i]-1]) ~ "#") return 1
+  return 0
+}
+function checkE(i)
+{
+  if ((g[ey[i]-1,ex[i]+1] g[ey[i],ex[i]+1] g[ey[i]+1,ex[i]+1]) ~ "#") return 1
+  return 0
+}
+function lonely(i,  eight)
+{
+  eight = (g[ey[i]-1,ex[i]-1] g[ey[i]-1,ex[i]] g[ey[i]-1,ex[i]+1] g[ey[i],ex[i]-1] g[ey[i],ex[i]+1] g[ey[i]+1,ex[i]-1] g[ey[i]+1,ex[i]] g[ey[i]+1,ex[i]+1])
+  if (eight ~ "#") return 0 
+  return 1
+}
+function countempty( y, x, cnt)
+{
+  for (y = miney; y <= maxey; y++) {
+    for (x = minex; x <= maxex; x++) {
+      if (g[y,x] != "#") cnt++;
+    }
+  }
+  return cnt;
+}
+function whatelf(y,x,   elf)
+{
+  for (elf = 0; elf < numelf; elf++) {
+    if (ey[elf] == y && ex[elf] == x) return elf
+  }
+  return -1
+}
+function pp(   y, x)
+{
+  for (y = miney; y <= maxey; y++) {
+    for (x = minex; x <= maxex; x++) {
+      printf("%c", g[y,x] == "#" ? g[y,x] : "."); # ord[whatelf(y,x)] 
+    }
+    printf " %d\n", y
+  }
+  printf "\n"
+}
+END {
+#print "numelf", numelf
+  miney = maxey = ey[0];
+  minex = maxex = ex[0];
+  for (elf = 1; elf < numelf; elf++) {
+    miney = min(miney,ey[elf])
+    maxey = max(maxey,ey[elf])
+    minex = min(minex,ex[elf])
+    maxex = max(maxex,ex[elf])
+  }
+  #print "miney", miney, "maxey", maxey, "minex", minex, "maxex", maxex
+  #print "== Initial State =="
+  pp();
+  move = needmove()
+  rules[0] = "checkN"
+  rules[1] = "checkS"
+  rules[2] = "checkW"
+  rules[3] = "checkE"
+  startrule = 0
+  round = 1
+  while (move == 1) {
+#print "START round", round, "startrule", startrule, rules[startrule]
+    # for each elf propose movement
+    for (elf = 0; elf < numelf; elf++) {
+      if (lonely(elf) == 1) {
+#print "elf", elf, "lonely", ey[elf], ex[elf]
+        pey[elf] = ey[elf]
+        pex[elf] = ex[elf]
+      } else {
+        for (r = 0; r < 4; r++) {
+          rul = (startrule+r)%4
+#print "elf", elf, "try rule", rul
+          fptr = rules[rul]
+          userule = @fptr(elf)
+          if (userule == 0) break
+#          print "elf", elf, "fails rule", rul
+        }
+        if (userule == 0) {
+#print "elf", elf, "userule", userule, "rul", rul, rules[rul], ryd[rul], rxd[rul], ey[elf], ex[elf]
+          pey[elf] = ey[elf] + ryd[rul]
+          pex[elf] = ex[elf] + rxd[rul]
+#print "Prop move elf", elf, "from", ey[elf], ex[elf], "to", pey[elf], pex[elf], rules[rul]
+        } else { # all blocked, stay put
+#print "elf", elf, "stays", ey[elf], ex[elf]
+          pey[elf] = ey[elf]
+          pex[elf] = ex[elf]
+        }
+      }
+    }
+    # check for collisions
+    delete col
+    for (elf = 0; elf < numelf-1; elf++) {
+       for (elf2 = elf+1; elf2 < numelf; elf2++) {
+         if (pey[elf] == pey[elf2] && pex[elf] == pex[elf2]) {
+           col[elf]=col[elf2]=1
+#print "collision", elf, pey[elf], pex[elf], "=>", elf2, pey[elf2], pex[elf2]
+         }
+      }
+    }
+    # colliding elfs dont move
+    for (elf in col) {
+#print "restore elf", elf
+      pey[elf] = ey[elf]
+      pex[elf] = ex[elf]
+    }
+    # now move all elves
+    for (elf = 0; elf < numelf; elf++) {
+      if (ey[elf] == pey[elf] && ex[elf] == pex[elf]) {
+      } else {
+        g[ey[elf],ex[elf]] = "."
+        g[pey[elf],pex[elf]] = "#"
+        ey[elf] = pey[elf]
+        ex[elf] = pex[elf]
+      }
+      if (elf == 0) {
+        miney = maxey = ey[elf]
+        minex = maxex = ex[elf]
+      } else {
+        miney = min(miney,ey[elf])
+        maxey = max(maxey,ey[elf])
+        minex = min(minex,ex[elf])
+        maxex = max(maxex,ex[elf])
+      }
+    }
+    if (++startrule >= 4) startrule=0
+    move = needmove()
+    #printf("\n== End of Round %d ==\n", round)
+    #pp()
+    if (round++ == 10) break
+  }
+  pp()
+  print countempty()
+}' $1
