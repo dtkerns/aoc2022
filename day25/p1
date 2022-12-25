@@ -1,0 +1,44 @@
+awk 'BEGIN {
+FS=""
+sfu["0"]=0
+sfu["1"]=1
+sfu["2"]=2
+sfu["-"]=-1
+sfu["="]=-2
+dec[0]="0"
+dec[1]="1"
+dec[2]="2"
+dec[-1]="-"
+dec[-2]="="
+base=5
+}
+function sfu2dec(n, t, b)
+{
+  $0 = n;
+  b = 0;
+  t = 0;
+  for (i = NF; i > 0; i--) {
+    d = sfu[$i] * base ^ b++;
+    t += d;
+  }
+  return t
+}
+function dec2sfu(n,  str)
+{
+   str = "";
+   c = 0;
+   while (n > 0) {
+     v = n % 5;
+     if (c) { v++; c = 0; }
+     if (v > 2) { c = 1; v -= 5; }
+     str = dec[v] str;
+     n = int(n / 5);
+   }
+   return str;
+}
+{ T += sfu2dec($0); }
+END {
+  print T;
+  print dec2sfu(T);
+  print sfu2dec(dec2sfu(T));
+}' $1
